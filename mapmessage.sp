@@ -10,7 +10,7 @@ KeyValues kv;
 public Plugin myinfo =
 {
 	name = "Map Message",
-	description = "",
+	description = "A better map message",
 	author = "Gunslinger",
 	version = "1.0",
 	url = ""
