@@ -1,9 +1,8 @@
-#include <clientprefs>
-
 #pragma newdecls required // let's go new syntax! 
 
-Handle g_hKvChat;
-Handle g_hKvDump;
+KeyValues g_hKvChat;
+KeyValues g_hKvDump;
+
 Handle g_hTimer;
 
 int g_iCountDown;
@@ -20,10 +19,10 @@ Handle hSync;
 public Plugin myinfo = 
 {
     name        = "Map Chat Translations",
-    author      = "Kyle",
-    description = "",
+    author      = "Kyle 'Kxnrl' FranKiss",
+    description = "DARLING in the FRANXX",
     version     = "1.0",
-    url         = "https://02.ditf.moe ? https://ump45.moe"
+    url         = "https://02.ditf.moe"
 };
 
 public void OnPluginStart()
@@ -34,8 +33,6 @@ public void OnPluginStart()
     
     HookEventEx("round_start", Event_RoundStart, EventHookMode_Post);
     HookEventEx("round_end", Event_RoundEnd, EventHookMode_Post);
-
-    //LoadTranslations("ze.phrases");
 
     char szPath[128];
     FormatEx(szPath, 128, "cfg/sourcemod/map-translations");
@@ -79,39 +76,39 @@ public Action Command_Reload(int args)
 void LoadTranslationFile()
 {
     //Chat
-    if(g_hKvChat != INVALID_HANDLE)
-        CloseHandle(g_hKvChat);
+    if(g_hKvChat != null)
+        delete g_hKvChat;
 
     FormatEx(g_szPath, 128, "cfg/sourcemod/map-translations/%s.cfg", g_szMap);
 
-    g_hKvChat = CreateKeyValues("Chat");
+    g_hKvChat = new KeyValues("Chat");
 
     if(!FileExists(g_szPath))
-        KeyValuesToFile(g_hKvChat, g_szPath);
+        g_hKvChat.ImportFromFile(g_szPath);
     else
-        FileToKeyValues(g_hKvChat, g_szPath);
+        g_hKvChat.ExportToFile(g_szPath);
     
-    KvRewind(g_hKvChat);
+    g_hKvChat.Rewind();
     
     //Dump
-    if(g_hKvDump != INVALID_HANDLE)
+    if(g_hKvDump != null)
     {
-        if(!KvGotoFirstSubKey(g_hKvDump, true))
+        if(!g_hKvDump.GotoFirstSubKey(true))
             DeleteFile(g_szDump);
-        
-        CloseHandle(g_hKvDump);
+
+        delete g_hKvDump;
     }
 
     BuildPath(Path_SM, g_szDump, 128, "data/mapdump/%s.cfg", g_szMap);
 
-    g_hKvDump = CreateKeyValues("Chat");
+    g_hKvDump = new KeyValues("Chat");
 
     if(!FileExists(g_szDump))
-        KeyValuesToFile(g_hKvDump, g_szDump);
+        g_hKvDump.ImportFromFile(g_szDump);
     else
-        FileToKeyValues(g_hKvDump, g_szDump);
+        g_hKvDump.ExportToFile(g_szDump);
     
-    KvRewind(g_hKvDump);
+    g_hKvDump.Rewind();
 }
 
 public Action OnClientSayCommand(int client, const char[] command, const char[] sArgs)
@@ -119,7 +116,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     if(client != 0)
         return Plugin_Continue;
 
-    if(StrEqual(sArgs, g_szLastChat))
+    if(strcmp(sArgs, g_szLastChat) == 0)
         return Plugin_Handled;
 
     strcopy(g_szLastChat, 256, sArgs);
@@ -130,32 +127,32 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     StripQuotes(szChat);
     ReplaceChar(szChat, 256);
 
-    if(g_hKvChat == INVALID_HANDLE)
+    if(g_hKvChat == null)
         LoadTranslationFile();
 
-    if(!KvJumpToKey(g_hKvChat, szChat))
+    if(!g_hKvChat.JumpToKey(szChat))
     {
-        KvJumpToKey(g_hKvChat, szChat, true);
-        KvSetString(g_hKvChat, "trans", szChat);
-        KvRewind(g_hKvChat);
-        KeyValuesToFile(g_hKvChat, g_szPath);
-        KvJumpToKey(g_hKvChat, szChat);
-        
+        g_hKvChat.JumpToKey(szChat, true);
+        g_hKvChat.SetString("trans", szChat);
+        g_hKvChat.Rewind();
+        g_hKvChat.ExportToFile(g_szPath);
+        g_hKvChat.JumpToKey(szChat);
+
         DumpChat(szChat);
     }
 
-    if(KvGetNum(g_hKvChat, "blocked", 0) == 1)
+    if(g_hKvChat.GetNum("blocked", 0) == 1)
     {
-        KvRewind(g_hKvChat);
+        g_hKvChat.Rewind();
         return Plugin_Handled;
     }
 
-    KvGetString(g_hKvChat, "trans", szTran, 256, szChat);
+    g_hKvChat.GetString("trans", szTran, 256, szChat);
 
     char szCommand[128];
-    KvGetString(g_hKvChat, "command", szCommand, 128, "none");
+    g_hKvChat.GetString("command", szCommand, 128, "none");
 
-    if(!StrEqual(szCommand, "none"))
+    if(strcmp(szCommand, "none") != 0)
         ServerCommand(szCommand);
 
     if(CheckingCountDown(sArgs, szChat, szTran))
@@ -179,7 +176,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
                 ShowSyncHudText(i, hSync, sChinese(i) ? szTran : szChat);
     }
 
-    KvRewind(g_hKvChat);
+    g_hKvChat.Rewind();
 
     return Plugin_Handled;
 }
@@ -246,14 +243,12 @@ void BroadcastCountDown()
     }
     else
     {
-        char szText[256];
         ClearTimer(g_hTimer);
-        FormatEx(szText, 128, "*** GoGoGo ***", g_iCountDown);
         SetHudTextParams(0.160500, 0.066000, 5.0, 0, 255, 0, 255, 0, 30.0, 0.0, 0.0);
-        
+
         for(int client = 1; client <= MaxClients; ++client)
         if(IsClientInGame(client))
-            ShowSyncHudText(client, hSync, szText);
+            ShowSyncHudText(client, hSync, "*** GoGoGo ***");
 
         Handle pb = StartMessageAll("Fade");
         PbSetInt(pb, "duration", 168);
@@ -281,16 +276,11 @@ void ReplaceChar(char[] buffer, int maxLen)
 
 void DumpChat(const char[] szChat)
 {
-    KvRewind(g_hKvDump);
-    KvJumpToKey(g_hKvDump, szChat, true);
-    KvSetString(g_hKvDump, "trans", szChat);
-    KvRewind(g_hKvDump);
-    KeyValuesToFile(g_hKvDump, g_szDump);
-
-    //char escape[512], query[1024];
-    //MG_MySQL_GetDatabase().Escape(szChat, escape, 512);
-    //FormatEx(query, 1024, "INSERT IGNORE INTO dxg_mapchat VALUES ('%s', '%s', '%s', null, 0, 0);", g_szMap, escape, escape);
-    //MG_MySQL_SaveDatabase(query);
+    g_hKvDump.Rewind();
+    g_hKvDump.JumpToKey(szChat, true);
+    g_hKvDump.SetString("trans", szChat);
+    g_hKvDump.Rewind();
+    g_hKvDump.ExportToFile(g_szDump);
 }
 
 bool sChinese(int client)
