@@ -1,4 +1,5 @@
 #!/bin/bash
+
 git fetch --unshallow
 
 #INFO
