@@ -14,23 +14,19 @@ char g_szNumberStr[8];
 char g_szChatStr_CN[256];
 char g_szChatStr_EN[256];
 
-Handle hSync;
-
 public Plugin myinfo = 
 {
     name        = "Map Chat Translations",
-    author      = "Kyle 'Kxnrl' FranKiss",
-    description = "DARLING in the FRANXX",
-    version     = "1.0",
-    url         = "https://02.ditf.moe"
+    author      = "Kyle 'Kxnrl' FranKiss - fix by Gunslinger",
+    description = "",
+    version     = "1.1",
+    url         = ""
 };
 
 public void OnPluginStart()
 {
     RegServerCmd("sm_reloadchat", Command_Reload);
-    
-    hSync = CreateHudSynchronizer();
-    
+        
     HookEventEx("round_start", Event_RoundStart, EventHookMode_Post);
     HookEventEx("round_end", Event_RoundEnd, EventHookMode_Post);
 
@@ -158,23 +154,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     if(CheckingCountDown(sArgs, szChat, szTran))
         return Plugin_Handled;
 
-    if(g_hTimer != INVALID_HANDLE)
-    {
-        static Handle hSync2;
-        if(hSync2 == INVALID_HANDLE)
-            hSync2 = CreateHudSynchronizer();
-        SetHudTextParams(-1.0, 0.745, 8.0, 9, 255, 9, 255, 0, 30.0, 0.0, 0.0);
-        for(int i = 1; i <= MaxClients; ++i)
-            if(IsClientInGame(i))
-                ShowSyncHudText(i, hSync2, sChinese(i) ? szTran : szChat);
-    }
-    else
-    {
-        SetHudTextParams(0.160500, 0.066000, 8.0, 9, 255, 9, 255, 0, 30.0, 0.0, 0.0);
-        for(int i = 1; i <= MaxClients; ++i)
-            if(IsClientInGame(i))
-                ShowSyncHudText(i, hSync, sChinese(i) ? szTran : szChat);
-    }
+    PrintToChatAll("[\x05地图提示\x01] \x02%s", sChinese(i) ? szTran : szChat);
 
     g_hKvChat.Rewind();
 
@@ -235,27 +215,14 @@ void BroadcastCountDown()
         FormatEx(szText[1], 256, "%s", g_szChatStr_CN);
         ReplaceCountdownNumber(szText[0], 256);
         ReplaceCountdownNumber(szText[1], 256);
-        SetHudTextParams(0.160500, 0.066000, 5.0, 238, 0, 0, 255, 0, 30.0, 0.0, 0.0);
-        
-        for(int client = 1; client <= MaxClients; ++client)
-        if(IsClientInGame(client))
-            ShowSyncHudText(client, hSync, sChinese(client) ? szText[1] : szText[0]);
+
+        PrintToChatAll("[\x05地图提示\x01] \x02%s", sChinese(client) ? szText[1] : szText[0]);
     }
     else
     {
         ClearTimer(g_hTimer);
-        SetHudTextParams(0.160500, 0.066000, 5.0, 0, 255, 0, 255, 0, 30.0, 0.0, 0.0);
 
-        for(int client = 1; client <= MaxClients; ++client)
-        if(IsClientInGame(client))
-            ShowSyncHudText(client, hSync, "*** GoGoGo ***");
-
-        Handle pb = StartMessageAll("Fade");
-        PbSetInt(pb, "duration", 168);
-        PbSetInt(pb, "hold_time", 168);
-        PbSetInt(pb, "flags", 0x0001|0x0010);
-        PbSetColor(pb, "clr", {0, 240, 0, 100});
-        EndMessage();
+        PrintToChatAll("[\x05地图提示\x01] \x02*** GoGoGo ***");
     }
 }
 
