@@ -154,7 +154,9 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
     if(CheckingCountDown(sArgs, szChat, szTran))
         return Plugin_Handled;
 
-    PrintToChatAll("[\x05地图提示\x01] \x02%s", sChinese(i) ? szTran : szChat);
+    for(int i = 1; i <= MaxClients; ++i)
+        if(IsClientInGame(i))
+            PrintToChat(i, "[\x05地图提示\x01] \x02%s", sChinese(i) ? szTran : szChat);
 
     g_hKvChat.Rewind();
 
@@ -216,7 +218,9 @@ void BroadcastCountDown()
         ReplaceCountdownNumber(szText[0], 256);
         ReplaceCountdownNumber(szText[1], 256);
 
-        PrintToChatAll("[\x05地图提示\x01] \x02%s", sChinese(client) ? szText[1] : szText[0]);
+        for(int i = 1; i <= MaxClients; ++i)
+            if(IsClientInGame(i))
+            PrintToChat(i, "[\x05地图提示\x01] \x02%s", sChinese(i) ? szText[1] : szText[0]);
     }
     else
     {

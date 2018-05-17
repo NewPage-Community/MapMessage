@@ -4,7 +4,7 @@ addons:
     - lib32stdc++6
     - p7zip-full
 
-language: c
+language: sourcepawn
 
 env:
   - SOURCEMOD=1.8

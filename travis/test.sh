@@ -1,7 +1,5 @@
 #!/bin/bash
-
 git fetch --unshallow
-COUNT=$(git rev-list --count HEAD)
 
 #INFO
 echo "*** Trigger build ***"
