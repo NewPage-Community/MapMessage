@@ -4,11 +4,10 @@ addons:
     - lib32stdc++6
     - p7zip-full
 
-language: sourcepawn
+language: c
 
 env:
-  - SOURCEMOD=1.8
-  - SOURCEMOD=1.9
+  - SOURCEMOD_VERSION=1.10
 
 script:
-    - 'bash travis/test.sh $SOURCEMOD;'
+    - make build
